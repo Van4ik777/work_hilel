@@ -1,5 +1,5 @@
 import string
-from random import random
+import random
 import pandas as pd
 
 from flask import Flask
@@ -36,6 +36,7 @@ def calculate_average():
     *pandas - use pandas for calculating
     """
     file = pd.read_csv('hw.csv')
+    file.columns = file.columns.str.strip()
     height = file['Height(Inches)'].mean()
     weight = file['Weight(Pounds)'].mean()
 
