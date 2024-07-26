@@ -13,25 +13,14 @@ def cache(max_limit=64):
                 deco._cache[cache_key][1] += 1
                 return deco._cache[cache_key][0]
 
-            else:
-                result = f(*args, **kwargs)
-                min_to_del = 0
-                min_freq = float['inf']
+            result = f(*args, **kwargs)
 
-                if len(deco._cache) >= max_limit:
-                    min_to_del = None
-                    min_freq = float['inf']
+            if len(deco._cache) >= max_limit:
+                min_freq = min(deco._cache, key=lambda k: deco._cache[k][1])
+                deco._cache.pop(min_freq)
 
-                    for key in deco._cache:
-                        if deco._cache[key][1] < min_freq:
-                            min_freq = deco._cache[key][1]
-                            min_to_del = deco._cache[key][1]
-
-                    if min_to_del is not None:
-                        deco._cache.pop[min_to_del]
-
-                deco._cache[cache_key] = [result, 1]
-                return result
+            deco._cache[cache_key] = [result, 1]
+            return result
 
         deco._cache = OrderedDict()
         return deco
@@ -43,7 +32,6 @@ def fetch_url(url, first_n=100):
     """Fetch a given url"""
     res = requests.get(url)
     return res.content[:first_n] if first_n else res.content
-
 
 # Memory usage decorator
 import tracemalloc
