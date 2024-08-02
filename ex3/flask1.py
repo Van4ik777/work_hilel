@@ -228,7 +228,8 @@ def get_bitcoin_rate(currency):
 @use_kwargs(
     {
         "currency": fields.Str(load_default='USD'),
-        "convert": fields.Integer( missing=1,)
+        "convert": fields.Integer(missing=1, validate=[validate.Range(min=1, max=1000, min_inclusive=True)]
+)
     },
     location="query"
 )
