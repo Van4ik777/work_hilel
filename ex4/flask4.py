@@ -38,7 +38,6 @@ def order_price(country):
     results = cursor.fetchall()
     conn.close()
 
-    # Format results as a list of dictionaries
     data = [{"BillingCountry": row[0], "TotalPrice": row[1]} for row in results]
 
     return jsonify(data)
