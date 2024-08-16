@@ -11,30 +11,18 @@ def connector():
 
 
 @app.route("/order_price")
-@use_kwargs(
-    {
-        "country": fields.Str(load_default=None)
-    },
-    location="query"
-)
-def order_price(country):
+def order_price():
     conn = connector()
     cursor = conn.cursor()
+
     query = """
         SELECT BillingCountry, SUM(UnitPrice * Quantity) AS TotalPrice 
         FROM Invoice
         JOIN InvoiceLine ON Invoice.InvoiceId = InvoiceLine.InvoiceId 
+        GROUP BY BillingCountry
     """
-    if country:
-        query += "WHERE BillingCountry = ? "
 
-    query += "GROUP BY BillingCountry"
-
-    if country:
-        cursor.execute(query, (country,))
-    else:
-        cursor.execute(query)
-
+    cursor.execute(query)
     results = cursor.fetchall()
     conn.close()
 
@@ -42,6 +30,35 @@ def order_price(country):
 
     return jsonify(data)
 
+@app.route("/order_price_by_country")
+@use_kwargs(
+    {
+        "country": fields.Str(required=True)
+    },
+    location="query"
+)
+def order_price_by_country(country):
+    conn = connector()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT BillingCountry, SUM(UnitPrice * Quantity) AS TotalPrice 
+        FROM Invoice
+        JOIN InvoiceLine ON Invoice.InvoiceId = InvoiceLine.InvoiceId 
+        WHERE BillingCountry = ?
+        GROUP BY BillingCountry
+    """
+
+    cursor.execute(query, (country,))
+    result = cursor.fetchone()
+    conn.close()
+
+    if result:
+        data = {"BillingCountry": result[0], "TotalPrice": result[1]}
+    else:
+        data = {"error": "Country not found"}
+
+    return jsonify(data)
 
 @app.route("/get_all_info_about_track")
 @use_kwargs(
