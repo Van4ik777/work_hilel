@@ -18,7 +18,6 @@ class Point:
         self.x = x
         self.y = y
 
-
 circle= Circle(0, 5, 10)
 point = Point(1, 15)
 

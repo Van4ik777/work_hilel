@@ -10,13 +10,7 @@ def connector():
     return sqlite3.connect('Chinook.sqlite')
 
 
-@app.route("/order_price")
-@use_kwargs(
-    {
-        "genre": fields.Str(required=True)
-    },
-    location="query"
-)
+
 def order_price(country):
     conn = connector()
     cursor = conn.cursor()

@@ -8,7 +8,10 @@ app = Flask(__name__)
 
 def connector():
     return sqlite3.connect('Chinook.sqlite')
-
+def result_and_close(cursor, conn):
+    results = cursor.fetchall()
+    conn.close()
+    return results
 
 @app.route("/order_price")
 def order_price():
@@ -23,10 +26,9 @@ def order_price():
     """
 
     cursor.execute(query)
-    results = cursor.fetchall()
-    conn.close()
+    result_and_close(cursor, conn)
 
-    data = [{"BillingCountry": row[0], "TotalPrice": row[1]} for row in results]
+    data = [{"BillingCountry": row[0], "TotalPrice": row[1]} for row in result_and_close]
 
     return jsonify(data)
 
@@ -50,11 +52,12 @@ def order_price_by_country(country):
     """
 
     cursor.execute(query, (country,))
-    result = cursor.fetchone()
-    conn.close()
 
-    if result:
-        data = {"BillingCountry": result[0], "TotalPrice": result[1]}
+    result_and_close(cursor, conn)
+
+
+    if result_and_close:
+        data = {"BillingCountry": result_and_close[0], "TotalPrice": result_and_close[1]}
     else:
         data = {"error": "Country not found"}
 
