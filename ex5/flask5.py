@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-from webargs import validate, fields
+from webargs import fields
 from webargs.flaskparser import use_kwargs
 import sqlite3
 
@@ -15,7 +15,12 @@ def result_and_close(cursor, conn):
     conn.close()
     return results
 
-
+@app.route('/order_price', methods=['GET'])
+@use_kwargs(
+    {
+        "country": fields.Str(load_default=None)
+    }, location="query"
+)
 def order_price(country):
     conn = connector()
     cursor = conn.cursor()
