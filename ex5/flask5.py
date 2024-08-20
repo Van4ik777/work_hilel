@@ -1,19 +1,9 @@
 from flask import Flask, jsonify
 from webargs import fields
 from webargs.flaskparser import use_kwargs
-import sqlite3
-
+from databasehandler import databasehandler as db
 app = Flask(__name__)
 
-
-def connector():
-    return sqlite3.connect('Chinook.sqlite')
-
-
-def result_and_close(cursor, conn):
-    results = cursor.fetchall()
-    conn.close()
-    return results
 
 @app.route('/order_price', methods=['GET'])
 @use_kwargs(
@@ -22,8 +12,6 @@ def result_and_close(cursor, conn):
     }, location="query"
 )
 def order_price(country):
-    conn = connector()
-    cursor = conn.cursor()
     query = """
         SELECT BillingCountry, SUM(UnitPrice * Quantity) AS TotalPrice 
         FROM Invoice
@@ -35,13 +23,11 @@ def order_price(country):
     query += "GROUP BY BillingCountry"
 
     if country:
-        cursor.execute(query, (country,))
+        results = db.execute_query(query, (country,))
     else:
-        cursor.execute(query)
+        results = db.execute_query(query)
 
-    res = result_and_close(cursor, conn)
-
-    data = [{"BillingCountry": row[0], "TotalPrice": row[1]} for row in res]
+    data = [{"BillingCountry": row[0], "TotalPrice": row[1]} for row in results]
 
     return jsonify(data)
 
@@ -53,9 +39,6 @@ def order_price(country):
     }, location="query"
 )
 def get_city_by_genre(genre):
-    conn = connector()
-    cursor = conn.cursor()
-
     query = """
     SELECT BillingCity, COUNT(*) as PurchaseCount
     FROM Invoice
@@ -68,10 +51,7 @@ def get_city_by_genre(genre):
     LIMIT 1;
     """
 
-    cursor.execute(query, (genre,))
-    result = cursor.fetchone()
-
-    conn.close()
+    result = db.execute_query_fetchone(query, (genre,))
 
     if result:
         city, purchase_count = result

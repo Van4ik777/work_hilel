@@ -1,35 +1,20 @@
 from flask import Flask, jsonify
 from webargs.flaskparser import use_kwargs
 from webargs import fields, validate
-import sqlite3
+from databasehandler import databasehandler as db
 
 app = Flask(__name__)
 
 
-def connector():
-    return sqlite3.connect('Chinook.sqlite')
-
-
-def result_and_close(cursor, conn):
-    results = cursor.fetchall()
-    conn.close()
-    return results
-
-
 @app.route("/order_price")
 def order_price():
-    conn = connector()
-    cursor = conn.cursor()
-
     query = """
         SELECT BillingCountry, SUM(UnitPrice * Quantity) AS TotalPrice 
         FROM Invoice
         JOIN InvoiceLine ON Invoice.InvoiceId = InvoiceLine.InvoiceId 
         GROUP BY BillingCountry
     """
-
-    cursor.execute(query)
-    results = result_and_close(cursor, conn)
+    results = db.execute_query(query)
 
     data = [{"BillingCountry": row[0], "TotalPrice": row[1]} for row in results]
 
@@ -44,9 +29,6 @@ def order_price():
     location="query"
 )
 def order_price_by_country(country):
-    conn = connector()
-    cursor = conn.cursor()
-
     query = """
         SELECT BillingCountry, SUM(UnitPrice * Quantity) AS TotalPrice 
         FROM Invoice
@@ -54,9 +36,7 @@ def order_price_by_country(country):
         WHERE BillingCountry = ?
         GROUP BY BillingCountry
     """
-
-    cursor.execute(query, (country,))
-    results = result_and_close(cursor, conn)
+    results = db.execute_query(query, (country,))
 
     if results:
         data = {"BillingCountry": results[0][0], "TotalPrice": results[0][1]}
@@ -74,9 +54,6 @@ def order_price_by_country(country):
     location="query"
 )
 def get_all_info_about_track(track_id):
-    conn = connector()
-    cursor = conn.cursor()
-
     if track_id:
         query = """
             SELECT
@@ -94,20 +71,14 @@ def get_all_info_about_track(track_id):
             JOIN Genre ON Track.GenreId = Genre.GenreId
             WHERE Track.TrackId = ?
         """
-        cursor.execute(query, (track_id,))
-        results = cursor.fetchall()
-        conn.close()
-        keys = ['TrackName', 'AlbumTitle', 'MediaTypeName', 'GenreName', 'Composer', 'Milliseconds', 'Bytes',
-                'UnitPrice']
+        results = db.execute_query(query, (track_id,))
+        keys = ['TrackName', 'AlbumTitle', 'MediaTypeName', 'GenreName', 'Composer', 'Milliseconds', 'Bytes', 'UnitPrice']
         data = [dict(zip(keys, entry)) for entry in results]
         return jsonify(data)
 
-    # If no track_id is provided, return the total duration of all tracks
     query_get_all_time = """SELECT SUM(Milliseconds) AS totalTime FROM Track"""
-    cursor.execute(query_get_all_time)
-    total_time = cursor.fetchone()[0]
+    total_time = db.execute_query_fetchone(query_get_all_time)[0]
     total_hours = total_time / (1000 * 60 * 60)
-    conn.close()
     return jsonify({"TotalHours": total_hours})
 
 

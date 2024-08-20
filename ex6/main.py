@@ -1,7 +1,7 @@
 import math
 
 
-class Shape:  # class Shape(object)
+class Shape:
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -20,7 +20,7 @@ class Circle(Shape):
         return math.pi * self.radius ** 2
 
     def __str__(self):
-        return f"Rectangle({self.x}, {self.y}, {self.radius})"
+        return f"Circle({self.x}, {self.y}, {self.radius})"
 
 
 class Rectangle(Shape):
@@ -48,7 +48,7 @@ class Parallelogram(Rectangle):
 
     def __str__(self):
         result = super().__str__()
-        return result + f'\nParallelogram: {self.width}, {self.height}, {self.angle}'
+        return result + f'\nParallelogram: {self.width}, {self.height}, {self.angle}, {self.x}, {self.y}'
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -122,7 +122,6 @@ class Circle:
 
     def __contains__(self, point: object) -> bool:
         distance = math.sqrt((self.x - point.x) ** 2 + (self.y - point.y) ** 2)
-        print(distance)
         return distance <= self.radius
 
 

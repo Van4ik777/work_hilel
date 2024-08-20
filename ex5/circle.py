@@ -9,7 +9,6 @@ class Circle:
 
     def __contains__(self, point: object) -> bool:
         distance = math.sqrt((self.x - point.x) ** 2 + (self.y - point.y) ** 2)
-        print(distance)
         return distance <= self.radius
 
 
