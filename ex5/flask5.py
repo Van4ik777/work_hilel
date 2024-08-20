@@ -40,24 +40,29 @@ def order_price(country):
 )
 def get_city_by_genre(genre):
     query = """
-    SELECT BillingCity, COUNT(*) as PurchaseCount
-    FROM Invoice
-    JOIN InvoiceLine ON Invoice.InvoiceId = InvoiceLine.InvoiceId
-    JOIN Track ON InvoiceLine.TrackId = Track.TrackId
-    JOIN Genre ON Track.GenreId = Genre.GenreId
-    WHERE Genre.Name = ?
-    GROUP BY BillingCity
-    ORDER BY PurchaseCount DESC
-    LIMIT 1;
+    SELECT BillingCity, PurchaseCount
+    FROM (
+        SELECT
+            BillingCity,
+            COUNT(*) AS PurchaseCount,
+            RANK() OVER (ORDER BY COUNT(*) DESC) AS city_rank
+        FROM Invoice
+        JOIN InvoiceLine ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+        JOIN Track ON InvoiceLine.TrackId = Track.TrackId
+        JOIN Genre ON Track.GenreId = Genre.GenreId
+        WHERE Genre.Name = ?
+        GROUP BY BillingCity
+    ) AS RankedCities
+    WHERE city_rank = 1;
     """
 
-    result = db.execute_query_fetchone(query, (genre,))
+    results = db.execute_query(query, (genre,))
 
-    if result:
-        city, purchase_count = result
-        return jsonify({"city": city, "purchase_count": purchase_count})
+
+    if results:
+        return jsonify({"cities": [{"city": row[0], "purchase_count": row[1]} for row in results]})
     else:
-        return jsonify({"error": "Жанр не знайден"})
+        return jsonify({"error": "Genre not found"})
 
 
 if __name__ == '__main__':
