@@ -15,9 +15,9 @@ class frange:
     def __next__(self):
         if (self.step > 0 and self.current >= self.stop) or (self.step < 0 and self.current <= self.stop):
             raise StopIteration
-        current_value = self.current
+        current = self.current
         self.current += self.step
-        return current_value
+        return current
 
 
 for i in frange(1, 100, 3.5):
